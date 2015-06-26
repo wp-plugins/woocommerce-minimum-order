@@ -4,7 +4,7 @@ Donate link: http://www.jem-products.com
 Tags: woocommerce
 Requires at least: 4.0
 Tested up to: 4.1.1
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2 
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,10 @@ Yes! I built this to be as simple as possible
 2. An example error message
 
 == Changelog ==
+
+= 1.1 =
+*Updated to use new Woocommerce hooks
+*Updtaed to detect which pages to show message on
 
 = 1.0 =
 * Initial version
