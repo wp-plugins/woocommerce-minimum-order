@@ -3,7 +3,7 @@
  * Plugin Name: Woocommerce Minimum Order
  * Plugin URI: http://jem-products.com
  * Description: This plugin creates a simple minimum order value for Woocommerce
- * Version: 1.0.0
+ * Version: 1.1
  * Author: Simon Emmett - JEM Marketing LLC
  * Author URI: http://jem-products.com
  */
@@ -21,10 +21,13 @@ class JEM_Controller{
 
 		add_action('admin_menu', array($this, 'my_plugin_menu') );
 		add_action('admin_init', array($this, 'jemmin_admin_init') );
-		//add_action('woocommerce_after_calculate_totals', array($this, 'jemmin_check_cart'), 99 );
-		//add_action('woocommerce_update_cart_action_cart_updated', array($this, 'jemmin_check_cart'), 99 );
-		add_action('woocommerce_after_calculate_totals', array($this, 'jemmin_check_cart'), 99 );
 
+		
+		//add_action('woocommerce_after_calculate_totals', array($this, 'jemmin_check_cart'), 99 );
+		//Updated v1.1 - change the woo hooks
+		add_action('woocommerce_checkout_process', array($this, 'jemmin_check_cart'), 99 );
+		add_action('woocommerce_before_cart', array($this, 'jemmin_check_cart'), 99 );
+		
 	}
 
 
@@ -52,28 +55,29 @@ class JEM_Controller{
 
 		//get the min purchase
 		$amt = get_option('min_amount');
-
-		//echo 'Got some' . intval($amt);
-
-
-		//We only want apply this on specific pages
-        $woocommerce_keys   =   array ( "woocommerce_cart_page_id" ,
-                            "woocommerce_checkout_page_id" ,
-                            "woocommerce_pay_page_id" );
-
-        foreach ( $woocommerce_keys as $wc_page_id ) {
-	        if ( get_the_ID () == get_option ( $wc_page_id , 0 ) ) {
-	        	//so we are on one of our pages
-	        		//echo $wc_page_id;
-	        	//lets check the amount
-				if($woocommerce->cart->total < intval($amt)) {
-
-					//Get the error meesage
-					$msg = get_option('error_message');
-					wc_print_notice( $msg, $notice_type = 'error'); 
+			
+			
+		// updated v1.1 - use woo built-in functions to test for correct page
+		//if (is_cart () || is_product () || is_checkout ()) {
+			// so we are on one of our pages
+			
+			// lets check the amount
+			if ($woocommerce->cart->subtotal < intval ( $amt )) {
+				
+				// Get the error meesage
+				$msg = get_option ( 'error_message' );
+				
+				// show the error message
+				// wc_print_notice( $msg, $notice_type = 'error');
+				// Updated v1.1 to differntiate between cart/other
+				if (is_cart ()) {
+					wc_print_notice ( $msg, 'error' );
+				} else {
+					wc_add_notice ( $msg, 'error' );
 				}
-	        }
-        }
+			}
+		//}
+        
 
 	}
 
@@ -82,25 +86,28 @@ class JEM_Controller{
 	function jemmin_admin_page(){
 		?>
 <div class="wrap">
-<h2>Woocommerce Minimum Order Setup</h2>
- 
- <p> Simply enter the minimum amount of the order along with the error message you would like to display </p>
- <p> It's that simple! </p>
-<form method="post" action="options.php">
+	<h2>Woocommerce Minimum Order Setup</h2>
+
+	<p>Simply enter the minimum amount of the order along with the error
+		message you would like to display</p>
+	<p>It's that simple!</p>
+	<form method="post" action="options.php">
     <?php settings_fields( JEMMIN_PLUGIN_SLUG . '-settings-group' ); ?>
     <?php do_settings_sections( JEMMIN_PLUGIN_SLUG . '-settings-group' ); ?>
     <table class="form-table">
-        <tr valign="top">
-        <th scope="row">Minimum Order Amount</th>
-        <td><input type="text" name="min_amount" value="<?php echo esc_attr( get_option('min_amount') ); ?>" /></td>
-        </tr>
-         
-        <tr valign="top">
-        <th scope="row">Error Message</th>
-        <td><input type="text" name="error_message" size='80' value="<?php echo esc_attr( get_option('error_message') ); ?>" /></td>
-        </tr>
-        
-    </table>
+			<tr valign="top">
+				<th scope="row">Minimum Order Amount</th>
+				<td><input type="text" name="min_amount"
+					value="<?php echo esc_attr( get_option('min_amount') ); ?>" /></td>
+			</tr>
+
+			<tr valign="top">
+				<th scope="row">Error Message</th>
+				<td><input type="text" name="error_message" size='80'
+					value="<?php echo esc_attr( get_option('error_message') ); ?>" /></td>
+			</tr>
+
+		</table>
     
     <?php submit_button(); ?>
  
